@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NPB順位予想</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Bebas+Neue&display=swap');
+
+  :root {
+    --cl: #0a0a14;
+    --cl2: #12121f;
+    --cl3: #1a1a2e;
+    --acc: #e8c94a;
+    --acc2: #4ae8c9;
+    --red: #e84a4a;
+    --text: #f0f0f8;
+    --sub: #8888aa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cl);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(28px, 5vw, 48px);
+    letter-spacing: 0.08em;
+    color: var(--acc);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--sub);
+    font-size: 12px;
+    margin-bottom: 32px;
+    letter-spacing: 0.1em;
+  }
+
+  .leagues {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 900px;
+    margin: 0 auto 32px;
+  }
+
+  .league-block {
+    flex: 1;
+    min-width: 280px;
+    max-width: 420px;
+  }
+
+  .league-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.12em;
+    padding: 8px 16px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+  }
+  .central .league-title { background: linear-gradient(90deg, #1a2a4a, #0d1a33); border-left: 4px solid #4a90e8; color: #7ab8ff; }
+  .pacific .league-title { background: linear-gradient(90deg, #2a1a1a, #331a0d); border-left: 4px solid #e87a4a; color: #ffb87a; }
+
+  /* 順位スロット */
+  .rank-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .rank-slot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 56px;
+    border-radius: 8px;
+    padding: 6px 10px;
+    background: var(--cl2);
+    border: 1.5px solid transparent;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .rank-slot.drag-over {
+    border-color: var(--acc);
+    background: #1e1e30;
+  }
+
+  .rank-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    width: 32px;
+    text-align: center;
+    flex-shrink: 0;
+    color: var(--sub);
+    line-height: 1;
+  }
+  .rank-slot[data-rank="1"] .rank-num { color: var(--acc); font-size: 32px; }
+  .rank-slot[data-rank="2"] .rank-num { color: #c0c0d8; }
+  .rank-slot[data-rank="3"] .rank-num { color: #c8884a; }
+
+  .slot-inner {
+    flex: 1;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    border-radius: 6px;
+    border: 1.5px dashed #2a2a40;
+    padding: 4px 8px;
+    background: transparent;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+  .slot-inner.has-team { border-style: solid; border-color: #2a2a50; background: var(--cl3); }
+
+  .empty-hint {
+    color: #44445a;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+  }
+
+  /* チームカード (スロット内) */
+  .team-placed {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    cursor: grab;
+  }
+  .team-placed:active { cursor: grabbing; }
+
+  .team-logo-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .team-name-jp {
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.2;
+  }
+  .team-name-en {
+    font-size: 10px;
+    color: var(--sub);
+    letter-spacing: 0.05em;
+  }
+
+  .remove-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #44445a;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.15s;
+    line-height: 1;
+  }
+  .remove-btn:hover { color: var(--red); }
+
+  /* チームパレット */
+  .palette-section {
+    max-width: 900px;
+    margin: 0 auto 28px;
+  }
+  .palette-label {
+    color: var(--sub);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    margin-bottom: 10px;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  .palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .team-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px 6px 8px;
+    background: var(--cl2);
+    border: 1.5px solid #2a2a40;
+    border-radius: 999px;
+    cursor: grab;
+    user-select: none;
+    transition: border-color 0.15s, opacity 0.2s, transform 0.15s;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .team-chip:hover { border-color: #4a4a70; transform: translateY(-2px); }
+  .team-chip:active { cursor: grabbing; }
+  .team-chip.used { opacity: 0.25; pointer-events: none; }
+  .team-chip.dragging { opacity: 0.4; }
+
+  .chip-logo {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+  }
+
+  /* エラー表示 */
+  .error-banner {
+    max-width: 900px;
+    margin: 0 auto 16px;
+    background: #2a0d0d;
+    border: 1.5px solid var(--red);
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: var(--red);
+    font-size: 13px;
+    display: none;
+    text-align: center;
+  }
+  .error-banner.show { display: block; }
+
+  /* アクションボタン */
+  .actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .btn {
+    padding: 12px 28px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn:active { transform: translateY(0); opacity: 0.85; }
+  .btn-primary { background: var(--acc); color: #0a0a14; }
+  .btn-secondary { background: var(--cl2); color: var(--text); border: 1.5px solid #2a2a50; }
+  .btn-save { background: var(--acc2); color: #0a0a14; }
+
+  /* 保存プレビュー用カード */
+  #capture-card {
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: 800px;
+    background: #0a0a14;
+    padding: 36px 40px 40px;
+    font-family: 'Noto Sans JP', sans-serif;
+  }
+
+  .card-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px;
+    color: var(--acc);
+    letter-spacing: 0.1em;
+  }
+  .card-year {
+    color: var(--sub);
+    font-size: 13px;
+    margin-top: 2px;
+    letter-spacing: 0.1em;
+  }
+
+  .card-leagues {
+    display: flex;
+    gap: 28px;
+  }
+
+  .card-league {
+    flex: 1;
+  }
+
+  .card-league-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 0.12em;
+    padding: 6px 14px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+
+  .card-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    background: var(--cl2);
+  }
+  .card-row-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    width: 28px;
+    text-align: center;
+    color: var(--sub);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .card-row[data-rank="1"] .card-row-num { color: var(--acc); }
+  .card-row[data-rank="2"] .card-row-num { color: #c0c0d8; }
+  .card-row[data-rank="3"] .card-row-num { color: #c8884a; }
+  .card-row-logo {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .card-row-name { font-weight: 700; font-size: 15px; }
+  .card-empty { color: #44445a; font-size: 13px; }
+
+  .card-footer {
+    text-align: right;
+    margin-top: 20px;
+    color: #44445a;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+  }
+</style>
+</head>
+<body>
+
+<h1>NPB 順位予想</h1>
+<p class="subtitle">CENTRAL LEAGUE &amp; PACIFIC LEAGUE — DRAG &amp; DROP TO RANK</p>
+
+<div class="error-banner" id="error-banner"></div>
+
+<div class="leagues">
+  <!-- セ・リーグ -->
+  <div class="league-block central" id="central-block">
+    <div class="league-title">Central League　セ・リーグ</div>
+    <div class="rank-slots" id="central-slots">
+      <!-- JS生成 -->
+    </div>
+  </div>
+
+  <!-- パ・リーグ -->
+  <div class="league-block pacific" id="pacific-block">
+    <div class="league-title">Pacific League　パ・リーグ</div>
+    <div class="rank-slots" id="pacific-slots">
+    </div>
+  </div>
+</div>
+
+<div class="palette-section">
+  <div class="palette-label">↓ チームをドラッグしてスロットへ</div>
+  <div class="palette" id="central-palette"></div>
+  <br>
+  <div class="palette" id="pacific-palette"></div>
+</div>
+
+<div class="actions">
+  <button class="btn btn-secondary" onclick="resetAll()">リセット</button>
+  <button class="btn btn-save" onclick="saveImage()">📷 画像として保存</button>
+</div>
+
+<!-- 保存用不可視カード -->
+<div id="capture-card"></div>
+
+<script>
+const CENTRAL = [
+  { id: 'yomiuri',   name: '読売ジャイアンツ', short: '巨人',    en: 'GIANTS',      emoji: '🔵', color: '#1a2a4a', text: '#7ab8ff' },
+  { id: 'hanshin',   name: '阪神タイガース',   short: '阪神',    en: 'TIGERS',      emoji: '🟡', color: '#2a2a10', text: '#f0d060' },
+  { id: 'hiroshima', name: '広島東洋カープ',   short: '広島',    en: 'CARP',        emoji: '🔴', color: '#2a1010', text: '#ff8080' },
+  { id: 'chunichi',  name: '中日ドラゴンズ',   short: '中日',    en: 'DRAGONS',     emoji: '🔷', color: '#101a2a', text: '#60a0e0' },
+  { id: 'yakult',    name: '東京ヤクルトスワローズ', short: 'ヤクルト', en: 'SWALLOWS', emoji: '⚪', color: '#1a102a', text: '#b090e0' },
+  { id: 'dena',      name: '横浜DeNAベイスターズ', short: 'DeNA',  en: 'BAYSTARS',   emoji: '🔵', color: '#0a1a2a', text: '#60c8f0' },
+];
+
+const PACIFIC = [
+  { id: 'softbank',  name: '福岡ソフトバンクホークス', short: 'ソフトバンク',  en: 'HAWKS',     emoji: '🟡', color: '#2a1a00', text: '#f0b030' },
+  { id: 'orix',      name: 'オリックス・バファローズ',  short: 'オリックス', en: 'BUFFALOES', emoji: '🟤', color: '#1a0a1a', text: '#d080c0' },
+  { id: 'lotte',     name: '千葉ロッテマリーンズ',     short: 'ロッテ', en: 'MARINES',  emoji: '⚫', color: '#0a0a0a', text: '#c0c0c0' },
+  { id: 'seibu',     name: '埼玉西武ライオンズ',       short: '西武',  en: 'LIONS',    emoji: '⚪', color: '#0a1520', text: '#a0c8e8' },
+  { id: 'nihonham',  name: '北海道日本ハムファイターズ', short: '日本ハム', en: 'FIGHTERS', emoji: '🔴', color: '#200a10', text: '#ff9090' },
+  { id: 'rakuten',   name: '東北楽天ゴールデンイーグルス', short: '楽天', en: 'EAGLES',  emoji: '🦅', color: '#200010', text: '#e06080' },
+];
+
+// state: {central: [teamId or null x6], pacific: [...]}
+const state = {
+  central: [null,null,null,null,null,null],
+  pacific: [null,null,null,null,null,null],
+};
+
+let dragTeam = null; // {id, league}
+let dragFromSlot = null; // {league, rank}
+
+function getTeam(id, league) {
+  return (league === 'central' ? CENTRAL : PACIFIC).find(t => t.id === id);
+}
+
+function renderSlots(league) {
+  const container = document.getElementById(`${league}-slots`);
+  container.innerHTML = '';
+  const arr = state[league];
+  for (let i = 0; i < 6; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'rank-slot';
+    slot.dataset.rank = i + 1;
+    slot.dataset.league = league;
+    slot.dataset.index = i;
+
+    const num = document.createElement('div');
+    num.className = 'rank-num';
+    num.textContent = i + 1;
+    slot.appendChild(num);
+
+    const inner = document.createElement('div');
+    inner.className = 'slot-inner' + (arr[i] ? ' has-team' : '');
+
+    if (arr[i]) {
+      const t = getTeam(arr[i], league);
+      inner.innerHTML = `
+        <div class="team-placed" draggable="true" data-teamid="${t.id}" data-league="${league}" data-fromrank="${i}">
+          <div class="team-logo-wrap" style="background:${t.color}">
+            <span style="font-size:18px">${t.emoji}</span>
+          </div>
+          <div>
+            <div class="team-name-jp">${t.short}</div>
+            <div class="team-name-en">${t.en}</div>
+          </div>
+          <button class="remove-btn" onclick="removeTeam('${league}',${i})">✕</button>
+        </div>`;
+      inner.querySelector('.team-placed').addEventListener('dragstart', onDragStartPlaced);
+      inner.querySelector('.team-placed').addEventListener('dragend', onDragEnd);
+    } else {
+      inner.innerHTML = `<span class="empty-hint">ここにドロップ</span>`;
+    }
+
+    slot.appendChild(inner);
+
+    slot.addEventListener('dragover', onDragOver);
+    slot.addEventListener('dragleave', onDragLeave);
+    slot.addEventListener('drop', onDrop);
+
+    container.appendChild(slot);
+  }
+}
+
+function renderPalette(league) {
+  const container = document.getElementById(`${league}-palette`);
+  container.innerHTML = '';
+  const teams = league === 'central' ? CENTRAL : PACIFIC;
+  const used = state[league].filter(Boolean);
+  teams.forEach(t => {
+    const chip = document.createElement('div');
+    chip.className = 'team-chip' + (used.includes(t.id) ? ' used' : '');
+    chip.draggable = true;
+    chip.dataset.teamid = t.id;
+    chip.dataset.league = league;
+    chip.innerHTML = `
+      <div class="chip-logo" style="background:${t.color}"><span>${t.emoji}</span></div>
+      <span>${t.short}</span>`;
+    chip.addEventListener('dragstart', onDragStartChip);
+    chip.addEventListener('dragend', onDragEnd);
+    container.appendChild(chip);
+  });
+}
+
+function renderAll() {
+  renderSlots('central');
+  renderSlots('pacific');
+  renderPalette('central');
+  renderPalette('pacific');
+}
+
+// ---- Drag handlers ----
+
+function onDragStartChip(e) {
+  dragTeam = { id: e.currentTarget.dataset.teamid, league: e.currentTarget.dataset.league };
+  dragFromSlot = null;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragStartPlaced(e) {
+  dragTeam = { id: e.currentTarget.dataset.teamid, league: e.currentTarget.dataset.league };
+  dragFromSlot = { league: e.currentTarget.dataset.league, index: parseInt(e.currentTarget.dataset.fromrank) };
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  dragTeam = null;
+  dragFromSlot = null;
+  document.querySelectorAll('.rank-slot').forEach(s => s.classList.remove('drag-over'));
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  const slot = e.currentTarget;
+  if (slot.dataset.league !== (dragTeam && dragTeam.league)) return;
+  slot.classList.add('drag-over');
+}
+
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  const slot = e.currentTarget;
+  slot.classList.remove('drag-over');
+  if (!dragTeam) return;
+
+  const targetLeague = slot.dataset.league;
+  const targetIndex = parseInt(slot.dataset.index);
+
+  if (dragTeam.league !== targetLeague) {
+    showError('セ・リーグとパ・リーグのチームは混在できません');
+    return;
+  }
+
+  const arr = state[targetLeague];
+
+  // スロット→スロットの移動（swap）
+  if (dragFromSlot !== null) {
+    const fromIndex = dragFromSlot.index;
+    const tmp = arr[targetIndex];
+    arr[targetIndex] = arr[fromIndex];
+    arr[fromIndex] = tmp;
+  } else {
+    // パレット→スロット
+    const existingIndex = arr.indexOf(dragTeam.id);
+    if (existingIndex !== -1) {
+      // 既に配置済みのチームを別スロットに移動
+      const tmp = arr[targetIndex];
+      arr[targetIndex] = dragTeam.id;
+      arr[existingIndex] = tmp;
+    } else {
+      arr[targetIndex] = dragTeam.id;
+    }
+  }
+
+  hideError();
+  renderAll();
+}
+
+function removeTeam(league, index) {
+  state[league][index] = null;
+  renderAll();
+}
+
+function resetAll() {
+  state.central = [null,null,null,null,null,null];
+  state.pacific = [null,null,null,null,null,null];
+  hideError();
+  renderAll();
+}
+
+function showError(msg) {
+  const b = document.getElementById('error-banner');
+  b.textContent = '⚠️ ' + msg;
+  b.classList.add('show');
+  setTimeout(hideError, 3000);
+}
+function hideError() {
+  document.getElementById('error-banner').classList.remove('show');
+}
+
+// ---- 画像保存 ----
+function buildCaptureCard() {
+  const year = new Date().getFullYear();
+  const card = document.getElementById('capture-card');
+
+  const buildLeague = (league, label, style) => {
+    const teams = league === 'central' ? CENTRAL : PACIFIC;
+    const arr = state[league];
+    let rows = '';
+    for (let i = 0; i < 6; i++) {
+      const t = arr[i] ? getTeam(arr[i], league) : null;
+      rows += `<div class="card-row" data-rank="${i+1}">
+        <div class="card-row-num">${i+1}</div>
+        ${t ? `<div class="card-row-logo" style="background:${t.color}">${t.emoji}</div>
+               <div class="card-row-name">${t.short}</div>` 
+            : `<span class="card-empty">—</span>`}
+      </div>`;
+    }
+    return `<div class="card-league">
+      <div class="card-league-title" style="${style}">${label}</div>
+      ${rows}
+    </div>`;
+  };
+
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="card-title">NPB ${year} 順位予想</div>
+      <div class="card-year">SEASON PREDICTION</div>
+    </div>
+    <div class="card-leagues">
+      ${buildLeague('central','Central League  セ・リーグ','background:linear-gradient(90deg,#1a2a4a,#0d1a33);border-left:4px solid #4a90e8;color:#7ab8ff;padding:6px 14px;border-radius:4px;')}
+      ${buildLeague('pacific','Pacific League  パ・リーグ','background:linear-gradient(90deg,#2a1a1a,#331a0d);border-left:4px solid #e87a4a;color:#ffb87a;padding:6px 14px;border-radius:4px;')}
+    </div>
+    <div class="card-footer">#NPB順位予想 ${year}</div>
+  `;
+}
+
+async function saveImage() {
+  buildCaptureCard();
+  const card = document.getElementById('capture-card');
+  card.style.left = '-9999px';
+
+  try {
+    const canvas = await html2canvas(card, {
+      backgroundColor: '#0a0a14',
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    });
+    const a = document.createElement('a');
+    a.download = `NPB_${new Date().getFullYear()}_順位予想.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  } catch(err) {
+    showError('画像の保存に失敗しました: ' + err.message);
+  }
+}
+
+// 初期化
+renderAll();
+</script>
+</body>
+</html>
