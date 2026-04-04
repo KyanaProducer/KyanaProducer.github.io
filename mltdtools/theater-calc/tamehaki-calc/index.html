@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>貯め吐き稼働提案 — ミリシタ お役立ちツール</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Klee+One&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #fafaf8;
+    --bg2:    #f3f2ee;
+    --bg3:    #eceae4;
+    --text:   #2c2c2a;
+    --muted:  #888780;
+    --border: #e0ddd6;
+    --acc:    #e06090;
+    --acc2:   #9b6fd6;
+    --green:  #4caf82;
+    --blue:   #5c8fd6;
+    --radius: 12px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: 'Noto Sans JP', sans-serif; font-weight: 300; line-height: 1.7; min-height: 100vh; }
+
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(250,250,248,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 32px; gap: 12px;
+  }
+  .nav-back  { font-family: 'Klee One', cursive; font-size: 14px; color: var(--muted); text-decoration: none; }
+  .nav-back:hover { color: var(--text); }
+  .nav-title { font-family: 'Klee One', cursive; font-size: 16px; color: var(--text); }
+
+  .page-wrap { max-width: 740px; margin: 0 auto; padding: 48px 20px 80px; }
+
+  .page-eyebrow {
+    display: inline-block; font-size: 12px; color: var(--acc);
+    background: rgba(224,96,144,0.1); border: 1px solid rgba(224,96,144,0.2);
+    border-radius: 999px; padding: 4px 14px; letter-spacing: 0.06em; margin-bottom: 14px;
+  }
+  h1 { font-family: 'Klee One', cursive; font-size: clamp(22px,4vw,32px); font-weight: 400; margin-bottom: 6px; }
+  .page-desc { font-size: 13px; color: var(--muted); margin-bottom: 32px; }
+
+  .card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 28px 28px 24px; margin-bottom: 20px;
+  }
+  .card-title {
+    font-family: 'Klee One', cursive; font-size: 15px; font-weight: 400;
+    color: var(--muted); margin-bottom: 20px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;
+  }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label { font-size: 12px; font-weight: 700; color: var(--text); }
+  label .hint { font-weight: 300; color: var(--muted); margin-left: 4px; }
+
+  select, input[type="text"], input[type="number"] {
+    padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: 'Noto Sans JP', sans-serif; font-size: 14px; color: var(--text);
+    background: var(--bg); appearance: none; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  select:focus, input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px rgba(224,96,144,0.12); }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888780' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px; }
+  .input-hint { font-size: 11px; color: var(--muted); }
+
+
+  .btn-calc {
+    width: 100%; padding: 14px; background: var(--acc); color: #fff;
+    border: none; border-radius: 8px; font-family: 'Noto Sans JP', sans-serif;
+    font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.05em;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    box-shadow: 0 2px 12px rgba(224,96,144,0.25); margin-top: 8px;
+  }
+  .btn-calc:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(224,96,144,0.35); }
+  .btn-calc:active { transform: none; opacity: 0.88; }
+
+  /* 結果カード */
+  .result-card {
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: var(--radius); padding: 28px;
+    display: none; opacity: 0; transform: translateY(12px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    margin-bottom: 20px;
+  }
+  .result-card.show { display: block; }
+  .result-card.anim { opacity: 1; transform: none; }
+
+  .result-summary {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+    gap: 12px; margin-bottom: 24px;
+  }
+  .summary-box { background: var(--bg2); border-radius: 8px; padding: 14px 16px; text-align: center; }
+  .summary-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.04em; }
+  .summary-value { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .summary-unit  { font-size: 11px; color: var(--muted); }
+  .summary-box.accent .summary-value { color: var(--acc); }
+  .summary-box.green  .summary-value { color: var(--green); }
+  .summary-box.blue   .summary-value { color: var(--blue); }
+
+  .breakdown-title {
+    font-size: 13px; font-weight: 700; color: var(--muted);
+    margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .breakdown-rows { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+  .breakdown-row {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; padding: 8px 12px; background: var(--bg2); border-radius: 6px;
+  }
+  .breakdown-row .row-label { color: var(--muted); }
+  .breakdown-row .row-val   { font-weight: 700; }
+
+  /* ── 残り回数メモエリア ── */
+  .memo-section { margin-top: 20px; }
+  .memo-section-title {
+    font-size: 13px; font-weight: 700; color: var(--muted);
+    margin-bottom: 6px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .memo-desc {
+    font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.7;
+    background: var(--bg2); border-radius: 8px; padding: 10px 14px;
+  }
+  .memo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .memo-box { background: var(--bg2); border-radius: 8px; padding: 14px 16px; }
+  .memo-box-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.04em; font-weight: 700; }
+
+  .counter-wrap { display: flex; align-items: center; gap: 10px; }
+  .counter-btn {
+    width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border);
+    background: #fff; font-size: 18px; line-height: 1; cursor: pointer; color: var(--text);
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.15s, background 0.15s; flex-shrink: 0;
+  }
+  .counter-btn:hover { border-color: var(--acc); background: rgba(224,96,144,0.06); }
+  .counter-btn:active { transform: scale(0.93); }
+  .counter-num {
+    font-size: 22px; font-weight: 700; color: var(--text);
+    min-width: 48px; text-align: center; line-height: 1;
+  }
+
+  /* 残り→得られたポイント表示 */
+  .memo-pts {
+    margin-top: 10px; font-size: 12px; color: var(--muted);
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .memo-pts .pt-row { display: flex; justify-content: space-between; align-items: center; }
+  .memo-pts .pt-val { font-weight: 700; color: var(--text); }
+  .memo-pts .pt-val.warn { color: var(--acc); }
+  .memo-pts .pt-val.good { color: var(--green); }
+
+  /* 合計表示 */
+  .memo-total {
+    margin-top: 14px; background: var(--bg2); border-radius: 8px; padding: 16px 18px;
+  }
+  .memo-total-title {
+    font-size: 13px; font-weight: 700; color: var(--muted);
+    margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .memo-total-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13px; margin-bottom: 4px;
+  }
+  .memo-total-row .tl { color: var(--muted); }
+  .memo-total-row .tv { font-weight: 700; color: var(--text); }
+  .memo-total-big {
+    display: flex; align-items: baseline; gap: 8px; margin-top: 12px;
+    padding-top: 10px; border-top: 1px solid var(--border);
+  }
+  .memo-total-big .big-num { font-size: 32px; font-weight: 700; color: var(--acc); }
+  .memo-total-big .big-unit { font-size: 14px; color: var(--muted); }
+  .memo-total-big .big-label { font-size: 12px; color: var(--muted); margin-left: 4px; }
+
+  .err-box {
+    background: #fff0f4; border: 1px solid rgba(224,96,144,0.3);
+    border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--acc);
+    margin-bottom: 16px; display: none;
+  }
+  .err-box.show { display: block; }
+
+  .note-box {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-left: 3px solid var(--acc2); border-radius: 4px;
+    padding: 12px 16px; font-size: 12px; color: var(--muted); line-height: 1.8;
+    margin-top: 4px;
+  }
+
+  footer { border-top: 1px solid var(--border); text-align: center; padding: 24px; }
+  footer p { font-size: 12px; color: #bbb; }
+  footer a { color: var(--acc); text-decoration: none; }
+
+  @media (max-width:560px) {
+    nav { padding: 10px 16px; }
+    .page-wrap { padding: 32px 16px 60px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: auto; }
+    .memo-grid { grid-template-columns: 1fr; }
+    .card { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-back" href="../index.html">← ミリシタ お役立ちツール</a>
+  <span class="nav-title">貯め吐き稼働提案</span>
+</nav>
+
+<div class="page-wrap">
+  <span class="page-eyebrow">シアター系イベント / 1.5倍前提</span>
+  <h1>⚡ 貯め吐き稼働提案</h1>
+  <p class="page-desc">残り時間・稼働ペースを入力すると、最適な貯め・吐き回数とポイントを計算します。</p>
+
+  <div class="card">
+    <div class="card-title">⚙️ 条件を入力</div>
+
+    <div class="form-grid">
+
+      <div class="form-group full">
+        <label>イベント形式</label>
+        <select id="event-type">
+          <option value="1">シアター（ティアラ含む）</option>
+          <option value="2">トラスト</option>
+          <option value="3">チューン</option>
+        </select>
+      </div>
+
+
+      <div class="form-group full">
+        <label>残り時間 <span class="hint">hh:mm:ss 形式</span></label>
+        <input type="text" id="remain-time" placeholder="例：01:30:00" maxlength="8">
+        <span class="input-hint">1時間30分 → 01:30:00　30分 → 00:30:00</span>
+      </div>
+
+      <div class="form-group">
+        <label>貯め 回数/時 <span class="hint">小数OK</span></label>
+        <input type="number" id="tame-per-hour" placeholder="例：17" step="0.1" min="0.1">
+      </div>
+
+      <div class="form-group">
+        <label>吐き 回数/時 <span class="hint">小数OK</span></label>
+        <input type="number" id="haki-per-hour" placeholder="例：10" step="0.1" min="0.1">
+      </div>
+
+      <div class="form-group">
+        <label>吐き10倍 実施回数</label>
+        <input type="number" id="haki-x10" placeholder="0" min="0" value="0">
+      </div>
+
+      <div class="form-group">
+        <label>スキップチケット 枚数</label>
+        <input type="number" id="skip-num" placeholder="0" min="0" value="0">
+      </div>
+
+      <div class="form-group">
+        <label>スキップ 1回あたり秒数</label>
+        <input type="number" id="skip-time" placeholder="25" min="1" value="25">
+      </div>
+
+      <div class="form-group">
+        <label>現在のトリガー保有数</label>
+        <input type="number" id="trigger" placeholder="0" min="0" value="0">
+      </div>
+
+    </div>
+
+    <div class="err-box" id="err-box"></div>
+    <button class="btn-calc" onclick="calculate()">⚡ 計算する</button>
+  </div>
+
+  <!-- 結果カード -->
+  <div class="result-card" id="result-card">
+    <div class="card-title">✨ 計算結果</div>
+
+    <div class="result-summary" id="result-summary"></div>
+
+    <div class="breakdown-title">📋 内訳（計算上の予定）</div>
+    <div class="breakdown-rows" id="breakdown-rows"></div>
+
+    <!-- 残り回数メモ -->
+    <div class="memo-section">
+      <div class="memo-section-title">📝 現在のポイント状況メモ</div>
+      <div class="memo-desc">
+        稼働を進めながら「残り回数」を減らしていくと、<strong>得られたポイント・トリガーの増減</strong>をリアルタイムで確認できます。<br>
+        残り回数 ＝ まだ実施していない回数です。0に近づくほど消化済みが増えます。
+      </div>
+
+      <div class="memo-grid">
+
+        <div class="memo-box">
+          <div class="memo-box-label">貯め 残り回数</div>
+          <div class="counter-wrap">
+            <button class="counter-btn" onclick="adjustMemo('tame',-1)">−</button>
+            <div class="counter-num" id="memo-tame-num">0</div>
+            <button class="counter-btn" onclick="adjustMemo('tame',+1)">＋</button>
+          </div>
+          <div class="memo-pts" id="memo-tame-pts"></div>
+        </div>
+
+        <div class="memo-box">
+          <div class="memo-box-label">残り 吐き（4倍）回数</div>
+          <div class="counter-wrap">
+            <button class="counter-btn" onclick="adjustMemo('haki4',-1)">−</button>
+            <div class="counter-num" id="memo-haki4-num">0</div>
+            <button class="counter-btn" onclick="adjustMemo('haki4',+1)">＋</button>
+          </div>
+          <div class="memo-pts" id="memo-haki4-pts"></div>
+        </div>
+
+        <div class="memo-box">
+          <div class="memo-box-label">残り 吐き（10倍）回数</div>
+          <div class="counter-wrap">
+            <button class="counter-btn" onclick="adjustMemo('haki10',-1)">−</button>
+            <div class="counter-num" id="memo-haki10-num">0</div>
+            <button class="counter-btn" onclick="adjustMemo('haki10',+1)">＋</button>
+          </div>
+          <div class="memo-pts" id="memo-haki10-pts"></div>
+        </div>
+
+        <div class="memo-box">
+          <div class="memo-box-label">残り スキップ回数</div>
+          <div class="counter-wrap">
+            <button class="counter-btn" onclick="adjustMemo('skip',-1)">−</button>
+            <div class="counter-num" id="memo-skip-num">0</div>
+            <button class="counter-btn" onclick="adjustMemo('skip',+1)">＋</button>
+          </div>
+          <div class="memo-pts" id="memo-skip-pts"></div>
+        </div>
+
+      </div>
+
+      <!-- 合計 -->
+      <div class="memo-total" id="memo-total">
+        <div class="memo-total-title">現在までに得られたポイント合計</div>
+        <div id="memo-total-rows"></div>
+        <div class="memo-total-big">
+          <span class="big-num" id="memo-grand-total">0</span>
+          <span class="big-unit">pt</span>
+          <span class="big-label" id="memo-grand-trig"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-box">
+    ⚠️ 本ツールにおけるトラストの計算は1.5倍ボーナス前提の計算です。<br>
+    ⚠️ 本ツールにおけるチューンの計算は30%ボーナス前提の計算です。
+  </div>
+</div>
+
+<footer>
+  <p><a href="../index.html">← ミリシタ お役立ちツール一覧</a>　&copy; 2025 きゃなのおもちゃ箱（出張編）</p>
+</footer>
+
+<script>
+// =====================================================
+// 定数（1.5倍前提）
+// =====================================================
+const BASE_CONFIG = {
+  1: {
+    name:              'シアター（ティアラ含む）',
+    haki_x4_point:     2536,
+    haki_x4_losttrig:  720,
+    haki_x10_point:    6340,
+    haki_x10_losttrig: 1800,
+    tame_get_point:    595,
+    tame_get_trig:     595,
+  },
+  2: {
+    name:              'トラスト',
+    haki_x4_point:     3708,
+    haki_x4_losttrig:  720,
+    haki_x10_point:    9270,
+    haki_x10_losttrig: 1800,
+    tame_get_point:    893,
+    tame_get_trig:     595,
+  },
+  3: {
+    name:              'チューン',
+    haki_x4_point:     2548,
+    haki_x4_losttrig:  560,
+    haki_x10_point:    6370,
+    haki_x10_losttrig: 1400,
+    tame_get_point:    525,
+    tame_get_trig:     525,
+  },
+};
+
+let G = null;  // 計算結果グローバル
+
+// =====================================================
+// メイン計算
+// =====================================================
+function calculate() {
+  const errBox = document.getElementById('err-box');
+  errBox.classList.remove('show');
+
+  const eventType   = parseInt(document.getElementById('event-type').value);
+  const remainRaw   = document.getElementById('remain-time').value.trim();
+  const tamePerHour = parseFloat(document.getElementById('tame-per-hour').value);
+  const hakiPerHour = parseFloat(document.getElementById('haki-per-hour').value);
+  const hakiX10Num  = parseInt(document.getElementById('haki-x10').value)  || 0;
+  const skipNum     = parseInt(document.getElementById('skip-num').value)  || 0;
+  const skipTime    = parseInt(document.getElementById('skip-time').value) || 25;
+  const trigger     = parseInt(document.getElementById('trigger').value)   || 0;
+
+  const timeMatch = remainRaw.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+  if (!timeMatch || isNaN(tamePerHour) || isNaN(hakiPerHour) || tamePerHour <= 0 || hakiPerHour <= 0) {
+    errBox.textContent = '残り時間は hh:mm:ss 形式で、貯め・吐き回数は1以上の数値を入力してください。';
+    errBox.classList.add('show');
+    return;
+  }
+
+  const cfg = { ...BASE_CONFIG[eventType] };
+
+  const remainSeconds = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
+  const tameTime = 3600 / tamePerHour;
+  const hakiTime = 3600 / hakiPerHour;
+
+  // スキップ＆10倍を先に実施
+  const totalSkipTime   = skipNum    * skipTime;
+  const skipPoints      = skipNum    * cfg.haki_x4_point;
+  const trigUsedForSkip = skipNum    * cfg.haki_x4_losttrig;
+  const totalX10Time    = hakiX10Num * hakiTime;
+  const x10Points       = hakiX10Num * cfg.haki_x10_point;
+  const trigUsedForX10  = hakiX10Num * cfg.haki_x10_losttrig;
+
+  const remainAfterPre = remainSeconds - totalSkipTime - totalX10Time;
+  const trigAfterPre   = trigger - trigUsedForSkip - trigUsedForX10;
+
+  // 最適な貯め・吐き組み合わせ探索
+  let maxPoints = 0, bestTame = 0, bestHaki = 0, bestRemTrig = 0;
+
+  const maxTameCount = Math.floor(remainAfterPre / tameTime) + 1;
+  for (let t = 0; t <= maxTameCount; t++) {
+    const tameTimeTot   = t * tameTime;
+    const tamePt        = t * cfg.tame_get_point;
+    const trigFromTame  = t * cfg.tame_get_trig;
+    const remTimeAfterTame = remainAfterPre - tameTimeTot;
+    if (remTimeAfterTame < 0) break;
+
+    const availTrig = trigAfterPre + trigFromTame;
+    const hakiCount = Math.min(
+      Math.floor(availTrig / cfg.haki_x4_losttrig),
+      Math.floor(remTimeAfterTame / hakiTime)
+    );
+    const hakiPt       = hakiCount * cfg.haki_x4_point;
+    const trigUsedHaki = hakiCount * cfg.haki_x4_losttrig;
+    const remTrig      = availTrig - trigUsedHaki;
+    const total        = tamePt + hakiPt + skipPoints + x10Points;
+
+    if (total > maxPoints) {
+      maxPoints   = total;
+      bestTame    = t;
+      bestHaki    = hakiCount;
+      bestRemTrig = remTrig;
+    }
+  }
+
+  G = {
+    cfg, eventType,
+    skipPoints, x10Points,
+    skipNum, hakiX10Num,
+    trigAfterPre,
+    bestTame, bestHaki, bestRemTrig, maxPoints,
+    // メモ用残り回数（最初は計算値と同じ）
+    memoTame:   bestTame,
+    memoHaki4:  bestHaki,
+    memoHaki10: hakiX10Num,
+    memoSkip:   skipNum,
+  };
+
+  renderResult();
+  renderMemo();
+}
+
+// =====================================================
+// 結果描画
+// =====================================================
+function renderResult() {
+  const { cfg, skipPoints, x10Points, hakiX10Num, skipNum, bestTame, bestHaki, bestRemTrig, maxPoints } = G;
+  const tamePt = bestTame * cfg.tame_get_point;
+  const hakiPt = bestHaki * cfg.haki_x4_point;
+
+  document.getElementById('result-summary').innerHTML = `
+    <div class="summary-box accent">
+      <div class="summary-label">合計獲得ポイント（予定）</div>
+      <div class="summary-value">${maxPoints.toLocaleString()}</div>
+      <div class="summary-unit">pt</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-label">最適 貯め回数</div>
+      <div class="summary-value">${bestTame}</div>
+      <div class="summary-unit">回</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-label">最適 吐き（4倍）回数</div>
+      <div class="summary-value">${bestHaki}</div>
+      <div class="summary-unit">回</div>
+    </div>
+    <div class="summary-box green">
+      <div class="summary-label">残りトリガー（予定）</div>
+      <div class="summary-value">${bestRemTrig.toLocaleString()}</div>
+      <div class="summary-unit">個</div>
+    </div>`;
+
+  const rows = [
+    { label: `スキップ消化（${skipNum}枚 × ${cfg.haki_x4_point.toLocaleString()}pt）`, val: skipPoints },
+    { label: `吐き10倍（${hakiX10Num}回 × ${cfg.haki_x10_point.toLocaleString()}pt）`, val: x10Points },
+    { label: `貯め（${bestTame}回 × ${cfg.tame_get_point.toLocaleString()}pt）`,        val: tamePt },
+    { label: `吐き4倍（${bestHaki}回 × ${cfg.haki_x4_point.toLocaleString()}pt）`,      val: hakiPt },
+  ];
+  document.getElementById('breakdown-rows').innerHTML = rows.map(r => `
+    <div class="breakdown-row">
+      <span class="row-label">${r.label}</span>
+      <span class="row-val">${r.val.toLocaleString()} pt</span>
+    </div>`).join('');
+
+  const card = document.getElementById('result-card');
+  card.classList.add('show');
+  requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('anim')));
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// =====================================================
+// メモエリア描画
+// =====================================================
+function renderMemo() {
+  if (!G) return;
+  const { cfg, bestTame, bestHaki, hakiX10Num, skipNum, trigAfterPre, memoTame, memoHaki4, memoHaki10, memoSkip } = G;
+
+  // 消化済み回数 = 計画 - 残り
+  const doneTame   = bestTame    - memoTame;
+  const doneHaki4  = bestHaki    - memoHaki4;
+  const doneHaki10 = hakiX10Num  - memoHaki10;
+  const doneSkip   = skipNum     - memoSkip;
+
+  // 得られたポイント（消化済み分）
+  const ptTame   = doneTame   * cfg.tame_get_point;
+  const ptHaki4  = doneHaki4  * cfg.haki_x4_point;
+  const ptHaki10 = doneHaki10 * cfg.haki_x10_point;
+  const ptSkip   = doneSkip   * cfg.haki_x4_point;
+
+  // トリガー計算（貯めで増え、吐きで減る）
+  const trigFromTame  = doneTame  * cfg.tame_get_trig;
+  const trigUsedHaki4 = doneHaki4 * cfg.haki_x4_losttrig;
+  const trigUsedHaki10= doneHaki10* cfg.haki_x10_losttrig;
+  const trigUsedSkip  = doneSkip  * cfg.haki_x4_losttrig;
+  const currentTrig   = trigAfterPre + trigFromTame - trigUsedHaki4 - trigUsedHaki10 - trigUsedSkip;
+
+  const grandTotal = ptTame + ptHaki4 + ptHaki10 + ptSkip;
+
+  // 各ボックス表示
+  document.getElementById('memo-tame-num').textContent  = memoTame;
+  document.getElementById('memo-haki4-num').textContent = memoHaki4;
+  document.getElementById('memo-haki10-num').textContent= memoHaki10;
+  document.getElementById('memo-skip-num').textContent  = memoSkip;
+
+  document.getElementById('memo-tame-pts').innerHTML = `
+    <div class="pt-row"><span>消化済み</span><span class="pt-val good">${doneTame} 回</span></div>
+    <div class="pt-row"><span>得られたポイント</span><span class="pt-val">${ptTame.toLocaleString()} pt</span></div>
+    <div class="pt-row"><span>得られたトリガー</span><span class="pt-val">${trigFromTame.toLocaleString()} 個</span></div>`;
+
+  document.getElementById('memo-haki4-pts').innerHTML = `
+    <div class="pt-row"><span>消化済み</span><span class="pt-val good">${doneHaki4} 回</span></div>
+    <div class="pt-row"><span>得られたポイント</span><span class="pt-val">${ptHaki4.toLocaleString()} pt</span></div>
+    <div class="pt-row"><span>消費トリガー</span><span class="pt-val${trigUsedHaki4 > 0 ? ' warn' : ''}">${trigUsedHaki4.toLocaleString()} 個</span></div>`;
+
+  document.getElementById('memo-haki10-pts').innerHTML = `
+    <div class="pt-row"><span>消化済み</span><span class="pt-val good">${doneHaki10} 回</span></div>
+    <div class="pt-row"><span>得られたポイント</span><span class="pt-val">${ptHaki10.toLocaleString()} pt</span></div>
+    <div class="pt-row"><span>消費トリガー</span><span class="pt-val${trigUsedHaki10 > 0 ? ' warn' : ''}">${trigUsedHaki10.toLocaleString()} 個</span></div>`;
+
+  document.getElementById('memo-skip-pts').innerHTML = `
+    <div class="pt-row"><span>消化済み</span><span class="pt-val good">${doneSkip} 回</span></div>
+    <div class="pt-row"><span>得られたポイント</span><span class="pt-val">${ptSkip.toLocaleString()} pt</span></div>`;
+
+  // 合計
+  document.getElementById('memo-total-rows').innerHTML = `
+    <div class="memo-total-row"><span class="tl">貯め</span><span class="tv">${ptTame.toLocaleString()} pt</span></div>
+    <div class="memo-total-row"><span class="tl">吐き（4倍）</span><span class="tv">${ptHaki4.toLocaleString()} pt</span></div>
+    <div class="memo-total-row"><span class="tl">吐き（10倍）</span><span class="tv">${ptHaki10.toLocaleString()} pt</span></div>
+    <div class="memo-total-row"><span class="tl">スキップ</span><span class="tv">${ptSkip.toLocaleString()} pt</span></div>`;
+
+  document.getElementById('memo-grand-total').textContent = grandTotal.toLocaleString();
+  document.getElementById('memo-grand-trig').textContent  =
+    `現在トリガー: ${currentTrig.toLocaleString()} 個${currentTrig < 0 ? ' ⚠️ 不足' : ''}`;
+  if (currentTrig < 0) {
+    document.getElementById('memo-grand-trig').style.color = 'var(--acc)';
+  } else {
+    document.getElementById('memo-grand-trig').style.color = '';
+  }
+}
+
+// =====================================================
+// メモカウンター操作
+// =====================================================
+function adjustMemo(type, delta) {
+  if (!G) return;
+  const maxMap = {
+    tame:   G.bestTame,
+    haki4:  G.bestHaki,
+    haki10: G.hakiX10Num,
+    skip:   G.skipNum,
+  };
+  const key = 'memo' + type.charAt(0).toUpperCase() + type.slice(1);
+  G[key] = Math.min(maxMap[type], Math.max(0, G[key] + delta));
+  renderMemo();
+}
+</script>
+</body>
+</html>
