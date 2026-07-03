@@ -56,7 +56,7 @@
   .wrap{border:1px solid var(--line);border-radius:8px;overflow:hidden;}
   .thead,.row{
     display:grid;
-    grid-template-columns:56px 150px 150px 96px 90px 90px 1fr;
+    grid-template-columns:56px 150px 150px 96px 108px 108px 1fr;
     align-items:center;
   }
   .thead{
@@ -71,9 +71,6 @@
   .row.running{background:var(--run-bg);}
   .row>div{padding:5px 10px;}
   .idx{font-family:var(--mono);color:var(--sub);text-align:right;padding-right:14px;}
-
-  .chk{display:flex;align-items:center;justify-content:center;}
-  .chk input{width:17px;height:17px;cursor:pointer;accent-color:var(--accent);}
 
   .time-in{
     width:100%;font-family:var(--mono);font-size:15px;
@@ -91,6 +88,9 @@
     background:#0c0f13;border:1px solid var(--line);border-radius:5px;color:var(--ink);padding:5px 2px;
   }
   .cnt input:focus{outline:none;border-color:var(--accent);}
+  .cnt.sm{gap:3px;}
+  .cnt.sm button{padding:2px 6px;font-size:13px;}
+  .cnt.sm input{width:40px;}
 
   .act button{width:100%;padding:6px 4px;font-size:12px;font-weight:600;}
   .act button.go{color:var(--accent);border-color:#2f4f48;}
@@ -98,7 +98,7 @@
 
   @media(max-width:640px){
     .stats{grid-template-columns:1fr 1fr;}
-    .thead,.row{grid-template-columns:40px 108px 116px 72px 66px 66px 1fr;}
+    .thead,.row{grid-template-columns:40px 108px 116px 72px 92px 92px 1fr;}
   }
 </style>
 </head>
@@ -138,7 +138,7 @@ const ROWS = 100;
 const rows = document.getElementById('rows');
 
 // state[i] = { ms:number|null, count:number, running:bool, startAt:number|null }
-const state = Array.from({length:ROWS}, () => ({ms:null, count:0, running:false, startAt:null, ron:false, jun:false}));
+const state = Array.from({length:ROWS}, () => ({ms:null, count:0, running:false, startAt:null, ron:0, jun:0}));
 let ticking = null;
 
 function fmt(ms){
@@ -181,8 +181,16 @@ for(let i=0;i<ROWS;i++){
       <button data-inc="${i}">▶</button>
     </div>
     <div class="act"><button class="go" data-btn="${i}">Start</button></div>
-    <div class="chk"><input type="checkbox" data-ron="${i}"></div>
-    <div class="chk"><input type="checkbox" data-jun="${i}"></div>
+    <div class="cnt sm">
+      <button data-rondec="${i}">◀</button>
+      <input data-ron="${i}" type="number" min="0" value="0">
+      <button data-roninc="${i}">▶</button>
+    </div>
+    <div class="cnt sm">
+      <button data-jundec="${i}">◀</button>
+      <input data-jun="${i}" type="number" min="0" value="0">
+      <button data-juninc="${i}">▶</button>
+    </div>
     <div></div>`;
   frag.appendChild(row);
 }
@@ -193,16 +201,20 @@ rows.addEventListener('click', e=>{
   const t=e.target;
   if(t.dataset.inc!==undefined){ const i=+t.dataset.inc; state[i].count++; syncCount(i); recalc(); }
   else if(t.dataset.dec!==undefined){ const i=+t.dataset.dec; state[i].count=Math.max(0,state[i].count-1); syncCount(i); recalc(); }
+  else if(t.dataset.roninc!==undefined){ const i=+t.dataset.roninc; state[i].ron++; syncRon(i); }
+  else if(t.dataset.rondec!==undefined){ const i=+t.dataset.rondec; state[i].ron=Math.max(0,state[i].ron-1); syncRon(i); }
+  else if(t.dataset.juninc!==undefined){ const i=+t.dataset.juninc; state[i].jun++; syncJun(i); }
+  else if(t.dataset.jundec!==undefined){ const i=+t.dataset.jundec; state[i].jun=Math.max(0,state[i].jun-1); syncJun(i); }
   else if(t.dataset.btn!==undefined){ toggle(+t.dataset.btn); }
 });
 rows.addEventListener('input', e=>{
   const t=e.target;
   if(t.dataset.c!==undefined){ const i=+t.dataset.c; state[i].count=Math.max(0,parseInt(t.value||'0',10)||0); recalc(); }
+  else if(t.dataset.ron!==undefined){ const i=+t.dataset.ron; state[i].ron=Math.max(0,parseInt(t.value||'0',10)||0); }
+  else if(t.dataset.jun!==undefined){ const i=+t.dataset.jun; state[i].jun=Math.max(0,parseInt(t.value||'0',10)||0); }
 });
 rows.addEventListener('change', e=>{
   const t=e.target;
-  if(t.dataset.ron!==undefined){ state[+t.dataset.ron].ron=t.checked; return; }
-  if(t.dataset.jun!==undefined){ state[+t.dataset.jun].jun=t.checked; return; }
   if(t.dataset.t!==undefined){
     const i=+t.dataset.t;
     if(state[i].running) return; // ignore edits while running
@@ -215,6 +227,8 @@ rows.addEventListener('change', e=>{
 function syncCount(i){
   rows.querySelector(`[data-c="${i}"]`).value = state[i].count;
 }
+function syncRon(i){ rows.querySelector(`[data-ron="${i}"]`).value = state[i].ron; }
+function syncJun(i){ rows.querySelector(`[data-jun="${i}"]`).value = state[i].jun; }
 
 function toggle(i){
   const st = state[i];
@@ -299,13 +313,13 @@ document.getElementById('reset').addEventListener('click', ()=>{
   if(!confirm('全ての行をリセットします。よろしいですか？')) return;
   clearInterval(ticking); ticking=null;
   for(let i=0;i<ROWS;i++){
-    state[i]={ms:null,count:0,running:false,startAt:null,ron:false,jun:false};
+    state[i]={ms:null,count:0,running:false,startAt:null,ron:0,jun:0};
     const row=rows.querySelector(`.row[data-i="${i}"]`);
     row.classList.remove('running');
     row.querySelector(`[data-t="${i}"]`).value=''; row.querySelector(`[data-t="${i}"]`).readOnly=false;
     row.querySelector(`[data-c="${i}"]`).value=0;
-    row.querySelector(`[data-ron="${i}"]`).checked=false;
-    row.querySelector(`[data-jun="${i}"]`).checked=false;
+    row.querySelector(`[data-ron="${i}"]`).value=0;
+    row.querySelector(`[data-jun="${i}"]`).value=0;
     const b=row.querySelector(`[data-btn="${i}"]`); b.textContent='Start'; b.className='go';
   }
   recalc();
@@ -317,8 +331,8 @@ document.getElementById('export').addEventListener('click', ()=>{
   for(let i=0;i<ROWS;i++){
     const s=state[i];
     const hasTime = !s.running && s.ms!=null;
-    if(hasTime || s.count>0 || s.ron || s.jun){
-      rowsCsv.push([i+1, hasTime?fmt(s.ms):'', hasTime?(s.ms/1000).toFixed(2):'', s.count, s.ron?'○':'', s.jun?'○':'']);
+    if(hasTime || s.count>0 || s.ron>0 || s.jun>0){
+      rowsCsv.push([i+1, hasTime?fmt(s.ms):'', hasTime?(s.ms/1000).toFixed(2):'', s.count, s.ron, s.jun]);
     }
   }
   // stats block
@@ -341,10 +355,10 @@ document.getElementById('export').addEventListener('click', ()=>{
     lines.push(`最多回数,${mx.c},${mx.n}回目`);
     lines.push(`最小回数,${mn.c},${mn.n}回目`);
   }
-  const ronCnt=state.filter(s=>s.ron).length;
-  const junCnt=state.filter(s=>s.jun).length;
-  lines.push(`ロンコネ合計,${ronCnt},チェック数`);
-  lines.push(`ジュニオール合計,${junCnt},チェック数`);
+  const ronCnt=state.reduce((a,s)=>a+s.ron,0);
+  const junCnt=state.reduce((a,s)=>a+s.jun,0);
+  lines.push(`ロンコネ合計,${ronCnt},合計回数`);
+  lines.push(`ジュニオール合計,${junCnt},合計回数`);
   lines.push('');
   lines.push('回,時間,秒,チャンチャレ回数,ロンコネ,ジュニオール');
   rowsCsv.forEach(r=>lines.push(r.join(',')));
