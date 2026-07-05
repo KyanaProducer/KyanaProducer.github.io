@@ -116,7 +116,14 @@
 
   <div class="toolbar">
     <button id="export">CSVエクスポート</button>
+    <button id="json-export">JSON書出</button>
+    <button id="json-import">JSON読込</button>
+    <input type="file" id="json-file" accept=".json,application/json" style="display:none">
     <button id="reset" class="danger">全リセット</button>
+    <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;">
+      <input type="checkbox" id="lap-mode" checked style="width:15px;height:15px;accent-color:var(--accent);">
+      ラップ連動（Stopで次を自動Start）
+    </label>
     <span class="hint">時間入力は <b>mm:ss.SS</b>（例 01:23.45）／ Start押下で計測開始・Stopで確定</span>
   </div>
 
@@ -140,6 +147,7 @@ const rows = document.getElementById('rows');
 // state[i] = { ms:number|null, count:number, running:bool, startAt:number|null }
 const state = Array.from({length:ROWS}, () => ({ms:null, count:0, running:false, startAt:null, ron:0, jun:0}));
 let ticking = null;
+let lapMode = true;
 
 function fmt(ms){
   if(ms==null) return '';
@@ -230,25 +238,46 @@ function syncCount(i){
 function syncRon(i){ rows.querySelector(`[data-ron="${i}"]`).value = state[i].ron; }
 function syncJun(i){ rows.querySelector(`[data-jun="${i}"]`).value = state[i].jun; }
 
+function startRow(i){
+  const st=state[i];
+  if(st.running) return;
+  const row=rows.querySelector(`.row[data-i="${i}"]`);
+  const btn=rows.querySelector(`[data-btn="${i}"]`);
+  const inp=rows.querySelector(`[data-t="${i}"]`);
+  st.running=true; st.startAt=performance.now();
+  row.classList.add('running');
+  btn.textContent='Stop'; btn.classList.remove('go'); btn.classList.add('stop');
+  inp.readOnly=true;
+  ensureTick();
+}
+
+function stopRow(i){
+  const st=state[i];
+  if(!st.running) return;
+  const row=rows.querySelector(`.row[data-i="${i}"]`);
+  const btn=rows.querySelector(`[data-btn="${i}"]`);
+  const inp=rows.querySelector(`[data-t="${i}"]`);
+  st.ms=performance.now()-st.startAt;
+  st.running=false; st.startAt=null;
+  row.classList.remove('running');
+  btn.textContent='Start'; btn.classList.remove('stop'); btn.classList.add('go');
+  inp.readOnly=false; inp.value=fmt(st.ms);
+  recalc();
+}
+
 function toggle(i){
-  const st = state[i];
-  const row = rows.querySelector(`.row[data-i="${i}"]`);
-  const btn = rows.querySelector(`[data-btn="${i}"]`);
-  const inp = rows.querySelector(`[data-t="${i}"]`);
+  const st=state[i];
   if(!st.running){
-    st.running=true; st.startAt=performance.now();
-    row.classList.add('running');
-    btn.textContent='Stop'; btn.classList.remove('go'); btn.classList.add('stop');
-    inp.readOnly=true;
-    ensureTick();
+    startRow(i);
   } else {
-    st.ms = performance.now()-st.startAt;
-    st.running=false; st.startAt=null;
-    row.classList.remove('running');
-    btn.textContent='Start'; btn.classList.remove('stop'); btn.classList.add('go');
-    inp.readOnly=false; inp.value=fmt(st.ms);
+    stopRow(i);
+    // lap mode: stopping row i immediately starts the next row
+    if(lapMode && i+1<ROWS && !state[i+1].running && state[i+1].ms==null){
+      startRow(i+1);
+      const nextRow=rows.querySelector(`.row[data-i="${i+1}"]`);
+      if(nextRow) nextRow.scrollIntoView({block:'nearest'});
+    }
     maybeStopTick();
-    recalc();
   }
 }
 
@@ -373,6 +402,67 @@ document.getElementById('export').addEventListener('click', ()=>{
   a.download=`lap_${ts.getFullYear()}${pad(ts.getMonth()+1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+});
+
+document.getElementById('lap-mode').addEventListener('change', e=>{ lapMode=e.target.checked; });
+
+// JSON export
+document.getElementById('json-export').addEventListener('click', ()=>{
+  const data={
+    version:1,
+    exportedAt:new Date().toISOString(),
+    rows:state.map((s,i)=>({n:i+1, ms:(!s.running && s.ms!=null)?s.ms:null, count:s.count, ron:s.ron, jun:s.jun}))
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const ts=new Date(), pad=n=>String(n).padStart(2,'0');
+  a.href=url;
+  a.download=`lap_${ts.getFullYear()}${pad(ts.getMonth()+1)}${pad(ts.getDate())}_${pad(ts.getHours())}${pad(ts.getMinutes())}.json`;
+  a.click(); URL.revokeObjectURL(url);
+});
+
+// JSON import
+document.getElementById('json-import').addEventListener('click', ()=>{
+  document.getElementById('json-file').click();
+});
+document.getElementById('json-file').addEventListener('change', e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data || !Array.isArray(data.rows)) throw new Error('形式が不正です');
+      if(!confirm('読み込むと現在の内容は上書きされます。続行しますか？')){ e.target.value=''; return; }
+      clearInterval(ticking); ticking=null;
+      for(let i=0;i<ROWS;i++){ state[i].running=false; state[i].startAt=null; }
+      for(let i=0;i<ROWS;i++){ state[i].ms=null; state[i].count=0; state[i].ron=0; state[i].jun=0; }
+      data.rows.forEach(r=>{
+        const i=(r.n|0)-1;
+        if(i<0||i>=ROWS) return;
+        state[i].ms = (typeof r.ms==='number')?r.ms:null;
+        state[i].count = Math.max(0, r.count|0);
+        state[i].ron = Math.max(0, r.ron|0);
+        state[i].jun = Math.max(0, r.jun|0);
+      });
+      for(let i=0;i<ROWS;i++){
+        const row=rows.querySelector(`.row[data-i="${i}"]`);
+        row.classList.remove('running');
+        const inp=row.querySelector(`[data-t="${i}"]`);
+        inp.readOnly=false; inp.value=fmt(state[i].ms);
+        row.querySelector(`[data-c="${i}"]`).value=state[i].count;
+        row.querySelector(`[data-ron="${i}"]`).value=state[i].ron;
+        row.querySelector(`[data-jun="${i}"]`).value=state[i].jun;
+        const b=row.querySelector(`[data-btn="${i}"]`); b.textContent='Start'; b.className='go';
+      }
+      recalc();
+    }catch(err){
+      alert('読み込みに失敗しました: '+err.message);
+    }
+    e.target.value='';
+  };
+  reader.readAsText(file);
 });
 
 recalc();
