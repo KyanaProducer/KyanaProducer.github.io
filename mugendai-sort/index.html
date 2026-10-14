@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="夢限大みゅーたいぷの楽曲を2択で選び、自分だけのTOP5を作る楽曲ソートです。">
+  <title>夢限大みゅーたいぷ楽曲ソート</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../" class="back-link">← おもちょぼこへ戻る</a>
+    <span class="header-note">FAN-MADE SORTER</span>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow">MUGENDAI MYU-TYPE / SONG SORTER</p>
+      <h1 id="page-title">夢限大みゅーたいぷ<br>楽曲ソート</h1>
+      <p class="lead">2曲ずつ、より好きなほうを選んでください。迷ったときは「どっちも同じくらい」で大丈夫。最後にあなたのTOP5を表示します。</p>
+    </section>
+
+    <section class="sorter" aria-labelledby="sorter-title">
+      <div id="start-view" class="start-view">
+        <p class="section-no">01 / START</p>
+        <h2 id="sorter-title">好きの順番を、ゆっくり決める。</h2>
+        <dl class="start-facts">
+          <div><dt>収録曲</dt><dd id="song-count">—</dd></div>
+          <div><dt>選択回数</dt><dd id="comparison-estimate">—</dd></div>
+          <div><dt>途中保存</dt><dd>自動</dd></div>
+        </dl>
+        <p class="start-note">曲数が多いため、すべての組み合わせは比較せず、少ない選択で順位を組み立てます。選び方によって回数は前後します。</p>
+        <button type="button" class="primary-action" id="start-button">ソートをはじめる</button>
+        <button type="button" class="text-action hidden" id="resume-button">前回の続きから</button>
+      </div>
+
+      <div id="sort-view" class="sort-view hidden" aria-live="polite">
+        <div class="progress-head">
+          <div>
+            <p class="section-no">02 / CHOOSE</p>
+            <p class="progress-copy"><strong id="progress-percent">0%</strong> 完了</p>
+          </div>
+          <p class="remaining-copy"><span id="decision-count">0</span>回選択済み<br><span id="remaining-count">最大あと — 回</span></p>
+        </div>
+        <div class="progress-track" aria-hidden="true"><span id="progress-bar"></span></div>
+        <p class="placed-copy" id="placed-copy">順位を組み立てています</p>
+
+        <div class="choice-grid">
+          <button type="button" class="song-choice" id="left-choice">
+            <span class="choice-label">A</span>
+            <strong id="left-title"></strong>
+            <span class="choose-text">こちらが好き</span>
+          </button>
+          <div class="versus" aria-hidden="true">or</div>
+          <button type="button" class="song-choice" id="right-choice">
+            <span class="choice-label">B</span>
+            <strong id="right-title"></strong>
+            <span class="choose-text">こちらが好き</span>
+          </button>
+        </div>
+
+        <button type="button" class="tie-action" id="tie-choice">どっちも同じくらい</button>
+        <div class="sort-actions">
+          <button type="button" class="text-action" id="undo-button" disabled>一つ前に戻る</button>
+          <button type="button" class="text-action" id="restart-button">最初からやり直す</button>
+        </div>
+      </div>
+
+      <div id="result-view" class="result-view hidden">
+        <p class="section-no">03 / RESULT</p>
+        <p class="result-kicker">YOUR FAVORITE SONGS</p>
+        <h2>あなたのTOP5</h2>
+        <ol id="top-five" class="top-five"></ol>
+        <details class="full-ranking">
+          <summary>全順位を見る</summary>
+          <ol id="all-ranking"></ol>
+        </details>
+        <button type="button" class="primary-action" id="result-restart-button">もう一度ソートする</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>非公式ファンメイドツール</span>
+    <span>&copy; 2026 KYANA</span>
+  </footer>
+
+  <script src="./songs.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
+
