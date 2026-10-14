@@ -1,400 +1,352 @@
+Attempting to perform the InitializeDefaultDrives operation on the 'FileSystem' provider failed.
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="野球やアイドルマスターを中心に、個人制作のツールを公開しているサイトです。">
 <title>きゃなのおもちょぼこ（出張編）</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:     #fafaf8;
-    --bg2:    #f3f3ef;
-    --bg3:    #eaeae4;
-    --text:   #2a2a26;
-    --muted:  #8a8a80;
-    --border: #e0e0d8;
-    --acc:    #5b8dee;
-    --acc2:   #ee8d5b;
-    --acc3:   #5bee9a;
+    --paper: #f4f1e9;
+    --paper-light: #fbfaf6;
+    --ink: #18201d;
+    --sub: #656b66;
+    --line: #c9c7bf;
+    --accent: #b64a2f;
+    --accent-dark: #843421;
+    --serif: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", serif;
+    --sans: "Yu Gothic", "YuGothic", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
   }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  *, *::before, *::after { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Noto Sans JP', sans-serif;
-    font-weight: 300;
-    line-height: 1.7;
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font-family: var(--sans);
+    line-height: 1.8;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
   }
+  a { color: inherit; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
 
-  nav {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(250,250,248,0.88);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 40px;
-  }
-
-  .nav-logo {
-    font-family: 'Zen Maru Gothic', sans-serif;
-    font-weight: 700;
-    font-size: 17px;
-    color: var(--text);
-    text-decoration: none;
-    letter-spacing: 0.03em;
-  }
-  .nav-logo .accent { color: var(--acc); }
-
-  .nav-links {
-    list-style: none;
-    display: flex;
-    gap: 28px;
-  }
-  .nav-links a {
-    font-size: 13px;
-    color: var(--muted);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-  .nav-links a:hover { color: var(--text); }
-
-  .hero {
-    text-align: center;
-    padding: 88px 24px 72px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .hero-eyebrow {
-    display: inline-block;
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    color: var(--acc);
-    background: rgba(91,141,238,0.08);
-    border: 1px solid rgba(91,141,238,0.2);
-    border-radius: 999px;
-    padding: 4px 14px;
-    margin-bottom: 28px;
-    font-weight: 400;
-  }
-
-  .hero h1 {
-    font-family: 'Zen Maru Gothic', sans-serif;
-    font-weight: 700;
-    font-size: clamp(26px, 5vw, 48px);
-    line-height: 1.3;
-    letter-spacing: 0.04em;
-    margin-bottom: 20px;
-    color: var(--text);
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards 0.15s;
-  }
-  .hero h1 .sub-title {
-    display: block;
-    font-size: clamp(14px, 2.5vw, 20px);
-    color: var(--muted);
-    font-weight: 400;
-    margin-top: 8px;
-  }
-
-  .hero-desc {
-    font-size: 14px;
-    color: var(--muted);
-    max-width: 420px;
-    margin: 0 auto 40px;
-    line-height: 1.9;
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards 0.3s;
-  }
-
-  .hero-cta {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-    opacity: 0;
-    animation: fadeUp 0.6s ease forwards 0.45s;
-  }
-
-  .btn {
-    font-size: 13px;
-    font-family: 'Noto Sans JP', sans-serif;
-    padding: 11px 28px;
-    border-radius: 8px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: transform 0.18s, box-shadow 0.18s;
-    display: inline-block;
-    font-weight: 400;
-  }
-  .btn:hover { transform: translateY(-2px); }
-  .btn-primary {
-    background: var(--acc);
-    color: #fff;
-    border: none;
-    box-shadow: 0 2px 12px rgba(91,141,238,0.3);
-  }
-  .btn-primary:hover { box-shadow: 0 4px 20px rgba(91,141,238,0.4); }
-  .btn-ghost {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .btn-ghost:hover { background: var(--bg2); }
-
-  section {
-    max-width: 1000px;
+  .site-header {
+    width: min(1120px, calc(100% - 48px));
     margin: 0 auto;
-    padding: 72px 24px;
+    padding: 28px 0 20px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--ink);
   }
+  .site-name {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-decoration: none;
+  }
+  .site-name small { margin-left: .35em; color: var(--sub); font: 11px var(--sans); }
+  .site-nav { display: flex; gap: 26px; }
+  .site-nav a {
+    color: var(--sub);
+    font-size: 12px;
+    text-decoration: none;
+  }
+  .site-nav a:hover { color: var(--accent); }
 
-  .section-label {
+  main { overflow: hidden; }
+  .hero {
+    width: min(1120px, calc(100% - 48px));
+    min-height: 560px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(260px, .55fr);
+    gap: 9vw;
+    align-items: center;
+    padding: 78px 0 86px;
+  }
+  .hero-kicker {
+    margin: 0 0 22px;
+    color: var(--accent);
     font-size: 11px;
-    letter-spacing: 0.18em;
-    color: var(--acc);
-    font-weight: 400;
-    margin-bottom: 8px;
+    font-weight: 700;
+    letter-spacing: .22em;
     text-transform: uppercase;
   }
-  .section-title {
-    font-family: 'Zen Maru Gothic', sans-serif;
-    font-weight: 700;
-    font-size: clamp(22px, 4vw, 32px);
-    margin-bottom: 40px;
-    color: var(--text);
+  .hero > * { min-width: 0; }
+  .hero h1 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(40px, 4.8vw, 66px);
+    font-weight: 600;
+    letter-spacing: -.04em;
+    line-height: 1.14;
   }
-
-  .tools-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
+  .hero h1 span {
+    display: block;
+    margin-top: 10px;
+    color: var(--sub);
+    font-family: var(--sans);
+    font-size: clamp(14px, 1.8vw, 20px);
+    font-weight: 500;
+    letter-spacing: .12em;
   }
-
-  .tool-card {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px 24px;
-    text-decoration: none;
-    color: inherit;
+  .hero-copy {
+    max-width: 480px;
+    margin: 34px 0 0;
+    color: var(--sub);
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+  .hero-guide {
+    align-self: end;
+    margin-bottom: 12px;
+    border-top: 1px solid var(--ink);
+  }
+  .hero-guide p {
+    margin: 0;
+    padding: 13px 0;
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--line);
+    color: var(--sub);
+    font-size: 11px;
+    letter-spacing: .08em;
   }
-  .tool-card:hover {
-    border-color: #c8c8be;
-    transform: translateY(-3px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+  .hero-guide p span { text-align: right; }
+  .hero-guide strong { color: var(--ink); font-weight: 600; }
+
+  .projects {
+    background: var(--paper-light);
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
   }
-  .tool-card.disabled { cursor: default; opacity: 0.72; }
-  .tool-card.disabled:hover { transform: none; box-shadow: none; border-color: var(--border); }
-
-  .tool-emoji { font-size: 36px; line-height: 1; margin-bottom: 4px; }
-
-  .tool-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    padding: 3px 10px;
-    border-radius: 999px;
-    align-self: flex-start;
-    font-weight: 400;
+  .section-inner {
+    width: min(1120px, calc(100% - 48px));
+    margin: 0 auto;
+    padding: 92px 0 104px;
   }
-  .badge-live { background: rgba(91,238,154,0.12); color: #1a8a4a; border: 1px solid rgba(91,238,154,0.35); }
-  .badge-wip  { background: rgba(238,141,91,0.1);  color: #a05020; border: 1px solid rgba(238,141,91,0.3); }
-  .badge-soon { background: rgba(91,141,238,0.08); color: var(--acc); border: 1px solid rgba(91,141,238,0.2); }
-
-  .badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
-  .badge-live .badge-dot { animation: pulse 1.8s ease-in-out infinite; }
-
-  .tool-name {
-    font-family: 'Zen Maru Gothic', sans-serif;
-    font-weight: 700;
-    font-size: 18px;
-    color: var(--text);
-  }
-
-  .tool-desc { font-size: 13px; color: var(--muted); line-height: 1.75; flex: 1; }
-
-  .tool-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-  .tag {
-    font-size: 10px;
-    color: var(--muted);
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    padding: 2px 8px;
-    border-radius: 4px;
-  }
-
-  .tool-link-hint { font-size: 12px; color: var(--acc); margin-top: 4px; }
-
-  .about-inner {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 40px;
+  .section-head {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
-    align-items: center;
+    grid-template-columns: 130px 1fr;
+    gap: 28px;
+    align-items: baseline;
+    margin-bottom: 50px;
   }
-  @media (max-width: 600px) {
-    .about-inner { grid-template-columns: 1fr; padding: 24px; }
-    nav { padding: 14px 20px; }
-  }
-
-  .about-text p { font-size: 13px; color: var(--muted); line-height: 1.9; margin-bottom: 14px; }
-  .about-text p:last-child { margin-bottom: 0; }
-  .about-text strong { color: var(--text); font-weight: 700; }
-
-  .about-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .stat-box {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px 14px;
-    text-align: center;
-  }
-  .stat-num {
-    font-family: 'Zen Maru Gothic', sans-serif;
+  .section-index {
+    margin: 0;
+    color: var(--accent);
+    font-size: 11px;
     font-weight: 700;
-    font-size: 36px;
-    color: var(--acc);
-    line-height: 1;
+    letter-spacing: .18em;
   }
-  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; margin-top: 6px; }
+  .section-title {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(30px, 4vw, 48px);
+    font-weight: 600;
+    letter-spacing: -.02em;
+  }
 
-  hr { border: none; border-top: 1px solid var(--border); }
+  .project-list { border-top: 1px solid var(--ink); }
+  .project {
+    position: relative;
+    display: grid;
+    grid-template-columns: 100px minmax(190px, .8fr) minmax(260px, 1.4fr) 90px;
+    gap: 30px;
+    align-items: center;
+    min-height: 156px;
+    padding: 25px 8px 25px 0;
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+    transition: color .2s ease, padding .2s ease;
+  }
+  .project::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: var(--paper);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform .22s ease;
+  }
+  .project:hover { color: var(--accent-dark); padding-left: 12px; }
+  .project:hover::before { transform: scaleY(1); }
+  .project > * { position: relative; z-index: 1; min-width: 0; }
+  .project-no { color: var(--sub); font: 12px/1 var(--sans); letter-spacing: .14em; }
+  .project-name {
+    font-family: var(--serif);
+    font-size: clamp(19px, 2.4vw, 27px);
+    font-weight: 600;
+    line-height: 1.45;
+  }
+  .project-desc { margin: 0; color: var(--sub); font-size: 13px; }
+  .project-meta { text-align: right; }
+  .project-status {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .14em;
+  }
+  .project-arrow { font: 24px/1 var(--serif); }
+
+  .about .section-inner { padding-bottom: 82px; }
+  .about-body {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr) minmax(260px, .7fr);
+    gap: 28px;
+    align-items: start;
+  }
+  .about-copy {
+    margin: 0;
+    max-width: 620px;
+    font-family: var(--serif);
+    font-size: clamp(18px, 2.2vw, 25px);
+    line-height: 1.9;
+  }
+  .about-note {
+    margin: 8px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--sub);
+    font-size: 12px;
+  }
 
   footer {
-    border-top: 1px solid var(--border);
-    text-align: center;
-    padding: 28px 24px;
-    background: var(--bg2);
+    width: min(1120px, calc(100% - 48px));
+    margin: 0 auto;
+    padding: 24px 0 36px;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    border-top: 1px solid var(--line);
+    color: var(--sub);
+    font-size: 10px;
+    letter-spacing: .1em;
   }
-  footer p { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
+  @media (max-width: 780px) {
+    .site-header { width: calc(100% - 32px); padding-top: 20px; }
+    .site-name { font-size: 13px; }
+    .site-name small { display: none; }
+    .site-nav { gap: 12px; }
+    .site-nav a { font-size: 10px; }
+    .hero {
+      width: calc(100% - 32px);
+      min-height: 0;
+      grid-template-columns: 1fr;
+      gap: 52px;
+      padding: 68px 0 60px;
+    }
+    .hero-copy, .project-desc, .about-note { line-break: anywhere; word-break: break-all; }
+    .hero-guide { width: 100%; max-width: 100%; margin: 0; }
+    .hero-guide p { display: grid; grid-template-columns: 1fr 1fr; }
+    .hero h1 { font-size: clamp(30px, 8.2vw, 32px); letter-spacing: -.06em; }
+    .section-inner { width: calc(100% - 32px); padding: 66px 0 72px; }
+    .section-head { grid-template-columns: 1fr; gap: 8px; margin-bottom: 34px; }
+    .project {
+      grid-template-columns: 54px 1fr 34px;
+      gap: 12px;
+      min-height: 0;
+      padding: 25px 0;
+    }
+    .project-desc { grid-column: 2 / 4; grid-row: 2; padding-right: 12px; }
+    .project-meta { grid-column: 3; grid-row: 1; }
+    .project-status { display: none; }
+    .about-body { grid-template-columns: 1fr; gap: 18px; }
+    footer { width: calc(100% - 32px); }
   }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.25; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition: none !important; }
   }
 </style>
 </head>
 <body>
 
-<nav>
-  <a class="nav-logo" href="#">きゃなのおもちょぼこ<span class="accent">（出張編）</span></a>
-  <ul class="nav-links">
-    <li><a href="#tools">ツール</a></li>
-    <li><a href="#about">このサイトについて</a></li>
-  </ul>
-</nav>
+<header class="site-header">
+  <a class="site-name" href="#top">きゃなのおもちょぼこ <small>出張編</small></a>
+  <nav class="site-nav" aria-label="ページ内ナビゲーション">
+    <a href="#tools">ツール</a>
+    <a href="#about">このサイトについて</a>
+  </nav>
+</header>
 
-<div class="hero">
-  <span class="hero-eyebrow">Kyana's Personal Tools</span>
-  <h1>
-    きゃなのおもちょぼこ
-    <span class="sub-title">（出張編）</span>
-  </h1>
-  <p class="hero-desc">
-    野球・アイドルマスターなど、好きなものを軸に<br>
-    作ったお役立ちツールを置いています。
-  </p>
-  <div class="hero-cta">
-    <a href="#tools" class="btn btn-primary">ツールを見る</a>
-    <a href="#about" class="btn btn-ghost">このサイトについて</a>
-  </div>
-</div>
-
-<section id="tools">
-  <p class="section-label">Tools</p>
-  <h2 class="section-title">ツール一覧</h2>
-  <div class="tools-grid">
-
-    <a href="./npb/" class="tool-card">
-      <div class="tool-emoji">⚾</div>
-      <div class="tool-badge badge-live"><span class="badge-dot"></span>公開中</div>
-      <div class="tool-name">NPB 順位予想</div>
-      <p class="tool-desc">セ・パ両リーグの順位をドラッグ＆ドロップで予想。画像として保存してXにポストできます。</p>
-      <div class="tool-tags">
-        <span class="tag">野球</span><span class="tag">NPB</span><span class="tag">ドラッグ&amp;ドロップ</span>
-      </div>
-      <p class="tool-link-hint">→ 使ってみる</p>
-    </a>
-
-    <a href="./mltdtools/" class="tool-card">
-      <div class="tool-emoji">⚙</div>
-      <div class="tool-badge badge-live"><span class="badge-dot"></span>公開中</div>
-      <div class="tool-name">ミリシタ お役立ちツール</div>
-      <p class="tool-desc">ミリシタの色々なツールを格納しています。現在開発したり公開したり。</p>
-      <div class="tool-tags">
-        <span class="tag">ミリシタ</span>
-      </div>
-      <p class="tool-link-hint">→ 使ってみる</p>
-    </a>
-
-    <a href="./mlb/" class="tool-card">
-      <div class="tool-emoji">🏟️</div>
-      <div class="tool-badge badge-soon">公開中</div>
-      <div class="tool-name">MLB 順位予想</div>
-      <p class="tool-desc">MLB全30球団・6地区の順位予想で利用します。</p>
-      <div class="tool-tags">
-        <span class="tag">野球</span><span class="tag">MLB</span>
-      </div>
-    </a>
-
-  </div>
-</section>
-
-<hr>
-
-<section id="about">
-  <p class="section-label">About</p>
-  <h2 class="section-title">このサイトについて</h2>
-  <div class="about-inner">
-    <div class="about-text">
-      <p>野球やアイドルマスターなど、<strong>好きなものを軸に作ったツールを公開する個人サイト</strong>です。</p>
-      <p>実用的なものから「ただ作りたかった」ものまで、思いつくままに追加していく予定です。ブログ的な記事は<strong>note</strong>で書いています。</p>
-      <p>ツールへの感想や要望はXまで気軽にどうぞ。</p>
+<main id="top">
+  <section class="hero" aria-labelledby="page-title">
+    <div>
+      <p class="hero-kicker">Kyana's personal workshop</p>
+      <h1 id="page-title">きゃなのおもちょぼこ<span>— 出張編 —</span></h1>
+      <p class="hero-copy">野球やアイドルマスターなど、好きなもののそばにある「ちょっと便利」を、自分の手で道具にしています。</p>
     </div>
-    <div class="about-stats">
-      <div class="stat-box">
-        <div class="stat-num">1</div>
-        <div class="stat-label">公開中のツール</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-num">2</div>
-        <div class="stat-label">開発中</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-num">12</div>
-        <div class="stat-label">NPB球団数</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-num">30</div>
-        <div class="stat-label">MLB球団数</div>
+    <aside class="hero-guide" aria-label="サイト案内">
+      <p><strong>CONTENTS</strong><span>個人制作ツール</span></p>
+      <p><strong>THEME</strong><span>野球／ミリシタ</span></p>
+      <p><strong>UPDATE</strong><span>気ままに更新</span></p>
+    </aside>
+  </section>
+
+  <section class="projects" id="tools" aria-labelledby="tools-title">
+    <div class="section-inner">
+      <header class="section-head">
+        <p class="section-index">01 / TOOLS</p>
+        <h2 class="section-title" id="tools-title">つくったもの</h2>
+      </header>
+
+      <div class="project-list">
+        <a class="project" href="./npb/">
+          <span class="project-no">01</span>
+          <strong class="project-name">NPB 順位予想</strong>
+          <p class="project-desc">セ・パ両リーグの順位を並べ替えて予想。画像として保存し、そのまま共有できます。</p>
+          <span class="project-meta"><span class="project-status">公開中</span><span class="project-arrow" aria-hidden="true">↗</span></span>
+        </a>
+
+        <a class="project" href="./mltdtools/">
+          <span class="project-no">02</span>
+          <strong class="project-name">ミリシタ お役立ちツール</strong>
+          <p class="project-desc">ミリシタにまつわる小さなツールをまとめています。作ったものから、少しずつ公開中。</p>
+          <span class="project-meta"><span class="project-status">公開中</span><span class="project-arrow" aria-hidden="true">↗</span></span>
+        </a>
+
+        <a class="project" href="./mlb/">
+          <span class="project-no">03</span>
+          <strong class="project-name">MLB 順位予想</strong>
+          <p class="project-desc">MLB全30球団、6地区の順位を自分なりに組み立てるための予想ツールです。</p>
+          <span class="project-meta"><span class="project-status">公開中</span><span class="project-arrow" aria-hidden="true">↗</span></span>
+        </a>
       </div>
     </div>
-  </div>
-</section>
+  </section>
+
+  <section class="about" id="about" aria-labelledby="about-title">
+    <div class="section-inner">
+      <header class="section-head">
+        <p class="section-index">02 / ABOUT</p>
+        <h2 class="section-title" id="about-title">このサイトについて</h2>
+      </header>
+      <div class="about-body">
+        <span aria-hidden="true"></span>
+        <p class="about-copy">実用的なものから、ただ作ってみたかったものまで。好きなものを起点にした個人制作の置き場です。</p>
+        <p class="about-note">ブログ的な記事はnoteに書いています。ツールへの感想や要望はXまで気軽にどうぞ。</p>
+      </div>
+    </div>
+  </section>
+</main>
 
 <footer>
-  <p>&copy; 2025 きゃなのおもちょぼこ（出張編）</p>
+  <span>&copy; 2026 KYANA</span>
+  <span>PERSONAL WORKSHOP</span>
 </footer>
 
 </body>
 </html>
+
