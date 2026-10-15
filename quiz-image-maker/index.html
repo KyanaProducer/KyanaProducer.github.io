@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="画像とテキストから、出題用・正解用のクイズ画像をブラウザ内で作成できるツールです。">
+<title>クイズ画像メーカー</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Yu Gothic",Meiryo,sans-serif;color:#eaf0ff;background:#0e1424}*{box-sizing:border-box}body{margin:0}header{padding:24px max(20px,calc((100vw - 1160px)/2));border-bottom:1px solid #29334b;background:#151d30}h1{font-size:25px;margin:0 0 7px}p{margin:0;color:#a9b7d2}.back{display:inline-block;margin-bottom:12px;color:#bad2ff;font-size:13px;text-decoration:none}.back:hover{text-decoration:underline}.back:focus-visible{outline:2px solid #8da8ff;outline-offset:4px}main{max-width:1160px;margin:auto;padding:24px 18px 70px;display:grid;grid-template-columns:330px 1fr;gap:24px}section{background:#192239;border:1px solid #33405c;border-radius:16px;padding:20px}h2{font-size:17px;margin:0 0 17px}.field{margin-bottom:17px}label{display:block;font-size:13px;font-weight:700;margin-bottom:8px;color:#dbe5ff}input[type=text],input[type=number],select,input[type=file]{width:100%;border:1px solid #455474;border-radius:9px;padding:11px;background:#0f182a;color:white;font-size:16px}input[type=file]{font-size:12px}input[type=range]{width:100%}.hint{font-size:12px;color:#9baac7;margin-top:5px}.row{display:flex;gap:10px}.row>.field{flex:1;min-width:0}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}button{border:0;border-radius:10px;background:#537bff;color:white;padding:12px 10px;font-weight:750;cursor:pointer}button.secondary{background:#344461}button:disabled{opacity:.45;cursor:not-allowed}.previews{display:grid;grid-template-columns:1fr 1fr;gap:14px}.preview{min-width:0}.preview h3{font-size:14px;margin:0 0 9px}.preview canvas{display:block;width:100%;height:auto;aspect-ratio:1050 / 590;background:white;border-radius:8px}.sub{font-size:12px;color:#aebbd5;margin:12px 0 0}#status{margin-top:14px;min-height:20px;color:#bad2ff;font-size:13px}details{margin-top:16px;font-size:13px;color:#afbfdd}summary{cursor:pointer}footer{max-width:1160px;margin:auto;padding:0 18px 30px;font-size:12px;color:#94a4c3}@media(max-width:850px){main{grid-template-columns:1fr}.previews{grid-template-columns:1fr}header{padding:20px}}
+</style>
+</head>
+<body>
+<header><a class="back" href="../">← トップページへ</a><h1>🖼️ クイズ画像メーカー</h1><p>画像を1枚選んで、問題文と正解を入力するだけ。2枚のPNGを生成します。</p></header>
+<main>
+<section><h2>1. 素材とテキスト</h2>
+<div class="field"><label for="photo">元画像</label><input id="photo" type="file" accept="image/*"><div class="hint">画像は外部に送信されず、ブラウザ内で処理します。</div></div>
+<div class="field"><label for="question">問題文（黒文字）</label><input id="question" type="text" value="すが◯" maxlength="100"></div>
+<div class="field"><label for="answer">正解（赤文字）</label><input id="answer" type="text" value="すがた" maxlength="100"></div>
+<h2>2. レイアウト調整</h2>
+<div class="field"><label for="ratio">画像の切り抜き方法</label><select id="ratio"><option value="contain">全体を表示（余白あり）</option><option value="cover" selected>枠いっぱいに表示（端を切り抜き）</option></select></div>
+<div class="row"><div class="field"><label for="size">文字の大きさ</label><input id="size" type="range" min="55" max="180" value="145"><div class="hint"><span id="sizeValue">145</span>px（長文は自動縮小）</div></div><div class="field"><label for="height">写真の高さ</label><input id="height" type="range" min="50" max="85" value="67"><div class="hint"><span id="heightValue">67</span>%</div></div></div>
+<div class="row"><div class="field"><label for="posx">写真の左右位置</label><input id="posx" type="range" min="0" max="100" value="50"></div><div class="field"><label for="posy">写真の上下位置</label><input id="posy" type="range" min="0" max="100" value="50"></div></div>
+<div class="field"><label for="stem">ファイル名（任意）</label><input id="stem" type="text" value="quiz_001" maxlength="80"></div>
+<div class="actions"><button id="saveQ">問題画像を保存</button><button id="saveA">正解画像を保存</button><button class="secondary" id="saveBoth">2枚まとめて保存</button><button class="secondary" id="saveData">設定JSONを保存</button></div>
+<div id="status" role="status" aria-live="polite"></div>
+<details><summary>画像サイズ・保存仕様</summary><p class="sub">出力は1050×590pxのPNG。上段に元画像、下段に文字を配置します。2枚まとめて保存はPNGを2回ダウンロードします（ブラウザが複数ダウンロードを確認する場合があります）。設定JSONに元画像そのものは含まれません。</p></details>
+</section>
+<section><h2>3. リアルタイムプレビュー</h2><div class="previews"><div class="preview"><h3>出題用</h3><canvas id="canvasQ" width="1050" height="590"></canvas></div><div class="preview"><h3>正解用</h3><canvas id="canvasA" width="1050" height="590"></canvas></div></div><p class="sub">元画像は両方で完全に共通です。設定を変えると自動でプレビューを更新します。</p></section>
+</main><footer>オフラインでも利用可能な単一HTMLファイルです。保存するまで画像データはPC上に残りません。</footer>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);let photo=null,originalName='';const fields=['question','answer','ratio','size','height','posx','posy','stem'];
+function status(s){$('status').textContent=s;}
+function renderText(ctx,text,color,y,height){ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';const maxWidth=980;let size=Number($('size').value);const font=s=>`900 ${s}px "Arial Black","Noto Sans JP","Yu Gothic",Meiryo,sans-serif`;ctx.font=font(size);while(size>20&&ctx.measureText(text).width>maxWidth){size-=2;ctx.font=font(size);}ctx.fillText(text,525,y+height/2,maxWidth);}
+function render(canvas,text,color){const ctx=canvas.getContext('2d');const W=canvas.width,H=canvas.height;ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);const photoHeight=Math.round(H*Number($('height').value)/100);const px=95,py=0,pw=860,ph=photoHeight;if(photo){const scale=($('ratio').value==='cover')?Math.max(pw/photo.width,ph/photo.height):Math.min(pw/photo.width,ph/photo.height);const w=photo.width*scale,h=photo.height*scale;const x=px+(pw-w)*Number($('posx').value)/100,y=py+(ph-h)*Number($('posy').value)/100;ctx.save();ctx.beginPath();ctx.rect(px,py,pw,ph);ctx.clip();ctx.drawImage(photo,x,y,w,h);ctx.restore();}else{ctx.fillStyle='#e9edf5';ctx.fillRect(px,py,pw,ph);ctx.fillStyle='#66728a';ctx.font='30px sans-serif';ctx.textAlign='center';ctx.fillText('ここに元画像が表示されます',525,ph/2);}renderText(ctx,text,color,photoHeight,H-photoHeight);}
+function renderAll(){$('sizeValue').textContent=$('size').value;$('heightValue').textContent=$('height').value;render($('canvasQ'),$('question').value,'#000000');render($('canvasA'),$('answer').value,'#f51e12');}
+$('photo').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;if(!file.type.startsWith('image/')){status('画像ファイルを選んでください。');return;}try{const bitmap=await createImageBitmap(file);if(photo&&photo.close)photo.close();photo=bitmap;originalName=file.name;status(`読み込みました: ${file.name}`);renderAll();}catch{status('画像を読み込めませんでした。別の画像をお試しください。');}});
+for(const id of fields)$(id).addEventListener('input',renderAll);
+function filename(suffix,ext){const stem=$('stem').value.trim().replace(/[\\/:*?"<>|\x00-\x1f]/g,'_')||'quiz';return `${stem}_${suffix}.${ext}`;}
+function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);}
+async function downloadCanvas(canvas,name){const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw Error('PNGの生成に失敗しました');downloadBlob(blob,name);}
+async function save(kind){if(!photo){status('先に元画像をアップロードしてください。');return;}try{if(kind==='q'||kind==='both')await downloadCanvas($('canvasQ'),filename('question','png'));if(kind==='a'||kind==='both')await downloadCanvas($('canvasA'),filename('answer','png'));status('PNGを保存しました。');}catch(e){status(e.message);}}
+$('saveQ').onclick=()=>save('q');$('saveA').onclick=()=>save('a');$('saveBoth').onclick=()=>save('both');
+$('saveData').onclick=()=>{const data={version:1,imageFilename:originalName,question:$('question').value,answer:$('answer').value,layout:{mode:$('ratio').value,fontSize:Number($('size').value),photoHeightPercent:Number($('height').value),positionX:Number($('posx').value),positionY:Number($('posy').value)},output:{width:1050,height:590}};downloadBlob(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),filename('settings','json'));status('設定JSONを保存しました（元画像は含まれません）。');};renderAll();
+})();
+</script>
+</body></html>
